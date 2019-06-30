@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const convert = require('koa-connect');
-const history = require('connect-history-api-fallback');
+const { WebpackPluginServe } = require('webpack-plugin-serve');
 
 const mode = process.env.NODE_ENV || 'production';
 
@@ -9,20 +8,16 @@ const publicPath = '/admin/';
 
 const devServerOpts = {
   port: 8000,
-  hotClient: true,
-  devMiddleware: {
-    publicPath,
-  },
-  add: app => {
-    app.use(convert(history({ index: publicPath })));
-  },
+  hmr: true,
+  static: 'dist', // webpack default output path
+  historyFallback: { index: publicPath }, // does not work as expected
 };
 
 module.exports = {
   mode,
   serve: devServerOpts,
   entry: {
-    app: [path.resolve('src/index.js')],
+    app: [path.resolve('src/index.js'), 'webpack-plugin-serve/client'],
   },
   output: {
     publicPath,
@@ -47,5 +42,7 @@ module.exports = {
       chunksSortMode: 'dependency',
       inject: 'body',
     }),
+    new WebpackPluginServe(devServerOpts),
   ],
+  watch: true,
 };
